@@ -2,6 +2,7 @@ const path = require("path");
 const express = require("express");
 const home = require("../routes/home");
 const users = require("../routes/users");
+const tasks = require("../routes/tasks");
 const notFound = require("../routes/404");
 
 module.exports = function (app) {
@@ -18,5 +19,6 @@ module.exports = function (app) {
   //use routes
   app.use("/", home);
   app.use("/users", users);
+  app.use("/tasks", tasks);
   app.use("/", notFound);
 };

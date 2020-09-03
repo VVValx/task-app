@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 
-const { Users, validate } = require("../models/users");
+const { Users, validateUser } = require("../models/users");
 
 router.get("/", async (req, res) => {
   const users = await Users.find().select("name username email");
@@ -17,7 +18,7 @@ router.post("/", async (req, res) => {
     email: req.body.email,
   };
 
-  const { error } = validate(obj);
+  const { error } = validateUser(obj);
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await Users.findOne({ email: req.body.email });
@@ -29,6 +30,11 @@ router.post("/", async (req, res) => {
     password: req.body.password,
     email: req.body.email,
   });
+
+  const salt = await bcrypt.genSalt(10);
+  const newPassword = await bcrypt.hash(req.body.password, salt);
+
+  user.password = newPassword;
 
   user = await user.save();
 
