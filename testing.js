@@ -29,3 +29,24 @@
 //     console.log(error);
 //   }
 // })();
+
+const sum = (f, s) => {
+  return new Promise((res, rej) => {
+    setTimeout(() => {
+      if (isNaN(f) || isNaN(s)) rej("Please enter a number");
+
+      res(f + s);
+    }, 2000);
+  });
+};
+
+// (async function calc() {
+//   try {
+//     const sum1 = await sum(3, 5);
+//     console.log(sum1);
+//     const sum2 = await sum(sum1, 6);
+//     console.log(sum2);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// })();

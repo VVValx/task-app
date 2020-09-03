@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const { Users, validateUser } = require("../models/users");
 
 router.get("/", async (req, res) => {
-  const users = await Users.find().select("name username email");
+  const users = await Users.find().select("name username email -_id");
   res.send(users);
 });
 
@@ -21,7 +21,10 @@ router.post("/", async (req, res) => {
   const { error } = validateUser(obj);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let user = await Users.findOne({ email: req.body.email });
+  let user = await Users.findOne().or([
+    { email: req.body.email },
+    { username: req.body.username },
+  ]);
   if (user) return res.status(400).send("User already exist");
 
   user = new Users({
@@ -43,6 +46,25 @@ router.post("/", async (req, res) => {
     username: user.username,
     email: user.email,
   });
+});
+
+router.put("/", async (req, res) => {
+  let user = await Users.findOne({ email: req.body.email });
+  if (!user) return res.status(404).send("User does not exist");
+
+  user.name = req.body.name;
+  user = await user.save();
+
+  res.send(user);
+});
+
+router.delete("/", async (req, res) => {
+  let user = await Users.findOne({ email: req.body.email });
+  if (!user) return res.status(404).send("User does not exist");
+
+  user = await Users.findOneAndDelete({ email: req.body.email });
+
+  res.send({ email: user.email });
 });
 
 module.exports = router;

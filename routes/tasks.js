@@ -1,9 +1,12 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const { Tasks, validateTask } = require("../models/tasks");
 
 router.get("/", async (req, res) => {
-  const tasks = await Tasks.find().select("description completed");
+  const tasks = await Tasks.find({ completed: false }).select(
+    "description -_id"
+  );
 
   res.send(tasks);
 });
@@ -19,6 +22,34 @@ router.post("/", async (req, res) => {
   task = await task.save();
 
   res.send({ description: task.description });
+});
+
+router.put("/:id", async (req, res) => {
+  const { error } = validateTask({ description: req.body.description });
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const validId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!validId) return res.status(400).send("Invalid task id");
+
+  let task = await Tasks.findById(req.params.id);
+  if (!task) return res.status(404).send("Task does not exist");
+
+  task.description = req.body.description;
+  task = await task.save();
+
+  res.send({ description: task.description });
+});
+
+router.delete("/:id", async (req, res) => {
+  const validId = mongoose.Types.ObjectId.isValid(req.params.id);
+  if (!validId) return res.status(400).send("Invalid task id");
+
+  let task = await Tasks.findById(req.params.id);
+  if (!task) return res.status(404).send("Task does not exist");
+
+  task = await Tasks.findByIdAndDelete(req.body.id);
+
+  res.send(task);
 });
 
 module.exports = router;
