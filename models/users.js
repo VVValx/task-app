@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const usersSchema = new mongoose.Schema({
@@ -36,15 +37,40 @@ const usersSchema = new mongoose.Schema({
     required: true,
   },
 
+  tokens: [{ type: String, required: true }],
+
   date: {
     type: Date,
     default: Date.now,
   },
 });
 
-usersSchema.methods.genToken = () => {
-  return jwt.sign({ _id: this._id }, "secretKey");
+usersSchema.methods.genToken = async function () {
+  const token = jwt.sign({ _id: this._id.toString() }, "secretKey");
+
+  this.tokens.push(token);
+  await this.save();
+
+  return token;
 };
+
+usersSchema.statics.findByCredentials = async (email, password) => {
+  const user = await Users.findOne({ email });
+  if (!user) return null;
+
+  const isPass = await bcrypt.compare(password, user.password);
+  if (!isPass) return null;
+
+  return user;
+};
+
+usersSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return;
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
 const Users = mongoose.model("Users", usersSchema);
 

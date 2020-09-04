@@ -50,3 +50,9 @@ const sum = (f, s) => {
 //     console.error(error);
 //   }
 // })();
+
+const allowed = ["a", "c", "d"];
+const array = ["c", "d", "a"];
+
+const isAllowed = array.every((arr) => allowed.includes(arr));
+console.log(isAllowed);

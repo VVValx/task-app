@@ -1,24 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
+const auth = require("../middlewares/auth");
 
 const { Users, validateUser } = require("../models/users");
 
-router.get("/", async (req, res) => {
-  const users = await Users.find().select("name username email -_id");
-  res.send(users);
+router.get("/me", auth, async (req, res) => {
+  const user = req.user;
+  res.send({ name: user.name, username: user.username, email: user.username });
 });
 
 router.post("/", async (req, res) => {
-  const obj = {
-    name: req.body.name,
-    username: req.body.username,
-    password: req.body.password,
-    repassword: req.body.repassword,
-    email: req.body.email,
-  };
-
-  const { error } = validateUser(obj);
+  const { error } = validateUser(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await Users.findOne().or([
@@ -34,31 +26,35 @@ router.post("/", async (req, res) => {
     email: req.body.email,
   });
 
-  const salt = await bcrypt.genSalt(10);
-  const newPassword = await bcrypt.hash(req.body.password, salt);
-
-  user.password = newPassword;
+  const token = await user.genToken();
 
   user = await user.save();
 
-  res.send({
+  res.header("x-token", token).send({
     name: user.name,
     username: user.username,
     email: user.email,
   });
 });
 
-router.put("/", async (req, res) => {
-  let user = await Users.findOne({ email: req.body.email });
+router.patch("/:id", auth, async (req, res) => {
+  const keys = Object.keys(req.body);
+  const allowedKeys = ["name", "username", "password", "email"];
+  const isAllowed = keys.every((key) => allowedKeys.includes(key));
+
+  if (!isAllowed) return res.status(400).send("Update now allowed");
+
+  let user = await Users.findById(req.params.id);
   if (!user) return res.status(404).send("User does not exist");
 
-  user.name = req.body.name;
+  keys.forEach(async (key) => (user[key] = req.body[key]));
+
   user = await user.save();
 
-  res.send(user);
+  res.send(req.body);
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", auth, async (req, res) => {
   let user = await Users.findOne({ email: req.body.email });
   if (!user) return res.status(404).send("User does not exist");
 

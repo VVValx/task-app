@@ -24,17 +24,16 @@ router.post("/", async (req, res) => {
   res.send({ description: task.description });
 });
 
-router.put("/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   const { error } = validateTask({ description: req.body.description });
   if (error) return res.status(400).send(error.details[0].message);
-
-  const validId = mongoose.Types.ObjectId.isValid(req.params.id);
-  if (!validId) return res.status(400).send("Invalid task id");
 
   let task = await Tasks.findById(req.params.id);
   if (!task) return res.status(404).send("Task does not exist");
 
-  task.description = req.body.description;
+  const keys = Object.keys(req.body);
+  keys.forEach((key) => (task[key] = req.body[key]));
+
   task = await task.save();
 
   res.send({ description: task.description });
