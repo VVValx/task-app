@@ -4,6 +4,7 @@ const home = require("../routes/home");
 const users = require("../routes/users");
 const tasks = require("../routes/tasks");
 const login = require("../routes/login");
+const logout = require("../routes/logout");
 const notFound = require("../routes/404");
 
 module.exports = function (app) {
@@ -26,5 +27,6 @@ module.exports = function (app) {
   app.use("/users", users);
   app.use("/tasks", tasks);
   app.use("/login", login);
+  app.use("/logout", logout);
   app.use("/", notFound);
 };

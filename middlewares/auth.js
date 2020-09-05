@@ -3,7 +3,7 @@ const { Users } = require("../models/users");
 
 module.exports = async function (req, res, next) {
   try {
-    const token = req.header("Authorisation");
+    const token = req.header("Authorization").replace("Bearer ", "");
     const decoded = jwt.verify(token, "secretKey");
 
     const user = await Users.findOne({
@@ -12,9 +12,11 @@ module.exports = async function (req, res, next) {
     });
     if (!user) throw new Error();
 
+    req.token = token;
     req.user = user;
+
     next();
   } catch (error) {
-    res.status(401).send("Unauthorised acess");
+    res.status(401).send("Unathorised Acess");
   }
 };

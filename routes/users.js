@@ -10,7 +10,7 @@ router.get("/", admin, async (req, res) => {
   res.send(users);
 });
 
-router.get("/me", auth, async (req, res) => {
+router.get("/me", auth, (req, res) => {
   const user = req.user;
   res.send({ name: user.name, username: user.username, email: user.username });
 });

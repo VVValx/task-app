@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
+const auth = require("../middlewares/auth");
 const { Tasks, validateTask } = require("../models/tasks");
 
 router.get("/", async (req, res) => {
@@ -11,7 +12,7 @@ router.get("/", async (req, res) => {
   res.send(tasks);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const obj = {
     description: req.body.description,
   };
@@ -24,7 +25,7 @@ router.post("/", async (req, res) => {
   res.send({ description: task.description });
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", auth, async (req, res) => {
   const { error } = validateTask({ description: req.body.description });
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -39,7 +40,7 @@ router.patch("/:id", async (req, res) => {
   res.send({ description: task.description });
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   const validId = mongoose.Types.ObjectId.isValid(req.params.id);
   if (!validId) return res.status(400).send("Invalid task id");
 
