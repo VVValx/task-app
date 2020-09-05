@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
+const admin = require("../middlewares/admin");
 
 const { Users, validateUser } = require("../models/users");
+
+router.get("/", admin, async (req, res) => {
+  const users = await Users.find().select("username email -_id");
+  res.send(users);
+});
 
 router.get("/me", auth, async (req, res) => {
   const user = req.user;

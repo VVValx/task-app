@@ -10,11 +10,13 @@ module.exports = async function (req, res, next) {
       _id: decoded._id,
       tokens: { $in: token },
     });
-    if (!user) throw new Error();
+
+    if (!user.isAdmin) throw new Error();
 
     req.user = user;
+
     next();
   } catch (error) {
-    res.status(401).send("Unauthorised acess");
+    res.status(401).send("Unauthorised Acess");
   }
 };
